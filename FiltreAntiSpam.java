@@ -73,7 +73,7 @@ public class FiltreAntiSpam {
 		
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
-			
+			//TODO aurel
 		}
 		PMailSpam = Math.log(this.PSpam) + PMailSpam;
 		
