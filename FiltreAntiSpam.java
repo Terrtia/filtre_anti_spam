@@ -1,6 +1,7 @@
 package filtre_anti_spam;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,14 +13,13 @@ public class FiltreAntiSpam {
 	public double[] bHam;
 	private ArrayList<String> dico;
 
-	public FiltreAntiSpam() {
+	public FiltreAntiSpam(String fichier) {
 		dico = new ArrayList<>();
+		chargerDico(fichier);
 	}
 	
 	public void chargerDico(String fichier){
 		String ligne;
-		
-		//lecture du fichier texte	
 		try{
 			InputStream ips=new FileInputStream(fichier); 
 			InputStreamReader ipsr=new InputStreamReader(ips);
@@ -49,8 +49,6 @@ public class FiltreAntiSpam {
 		int index;
 		String sac[];
 		String regex = " ?[,;:...]? | [,;:...]? ?|[,;:...]";
-		
-		//lecture du fichier texte	
 		try{
 			InputStream ips=new FileInputStream(fichier); 
 			InputStreamReader ipsr=new InputStreamReader(ips);
@@ -78,7 +76,6 @@ public class FiltreAntiSpam {
 	}
 	
 	public void apprentissage() {
-		//TODO get apprentissage vector
 		
 		//TODO GET VARIABLE
 		int dicoSize = 1000;
@@ -87,21 +84,12 @@ public class FiltreAntiSpam {
 		String SpamDirectory = "baseapp/spam";
 		String HamDirectory = "baseapp/ham";
 		
-		int[] apparitionMotsSpam = new int[dicoSize]; 
-		int[] apparitionMotsHam = new int[dicoSize]; 
+		int[] apparitionMotsSpam = apprentissageMail(SpamDirectory); 
+		int[] apparitionMotsHam = apprentissageMail(HamDirectory); 
 		
 		this.bSpam = new double[dicoSize];
 		this.bHam = new double[dicoSize];
 		
-		//apparition des mots dans les spams
-		for(int i=0; i<nbSpam; i++){
-			this.apprentissage1Mail(SpamDirectory + "i" + ".txt", apparitionMotsSpam);
-		}
-		
-		//apparition des mots dans les hams
-		for(int i=0; i<nbHam; i++){
-			this.apprentissage1Mail(HamDirectory + "i" + ".txt", apparitionMotsHam);
-		}
 		
 		//SPAM, estimation des probabilites par les frequences
 		for(int i=0; i<nbSpam; i++){
@@ -117,9 +105,24 @@ public class FiltreAntiSpam {
 		
 	}
 	
-	public void apprentissage1Mail(String DirectoryName, int[] apparitionMots) {
-		//	TODO readFile, remplir le tableau: +1 pour le mot si le spam contient le mot
-		
+	public int[] apprentissageMail(String directoryName) {
+		int mots[] = new int[dico.size()];
+		for(int i = 0; i < mots.length;i++){
+			mots[i] = 0;
+		}
+		boolean vecteur[];
+		String [] files;
+		File repertoire = new File(directoryName);
+		files=repertoire.list();
+		for(String fileName : files){
+			vecteur = lireMessage(fileName);
+			for(int i = 0; i < vecteur.length;i++){
+				if(vecteur[i]){
+					mots[i]++;
+				}
+			}
+		}
+		return mots;
 	}
 
 	/**
