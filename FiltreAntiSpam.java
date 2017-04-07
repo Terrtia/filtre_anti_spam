@@ -11,9 +11,15 @@ public class FiltreAntiSpam {
 	
 	public double[] bSpam;
 	public double[] bHam;
+	
+	public double PSpam;
+	public double PHam;
+
 	private ArrayList<String> dico;
 
+
 	public FiltreAntiSpam(String fichier) {
+
 		dico = new ArrayList<>();
 		chargerDico(fichier);
 	}
@@ -81,6 +87,7 @@ public class FiltreAntiSpam {
 		int dicoSize = 1000;
 		int nbSpam = 500;
 		int nbHam = 500;
+		int nbMail = nbSpam + nbHam;
 		String SpamDirectory = "baseapp/spam";
 		String HamDirectory = "baseapp/ham";
 		
@@ -101,7 +108,11 @@ public class FiltreAntiSpam {
 			this.bHam[i] = (double) (apparitionMotsHam[i] / nbHam);
 		}
 		
+		//SPAM, estimation Probabilite a posteriori P(Y = SPAM)
+		this.PSpam = (double) (nbSpam / nbMail) ;
 		
+		//HAM, estimation Probabilite a posteriori P(Y = HAM)
+		this.PHam = 1 - this.PSpam;
 		
 	}
 	
@@ -123,6 +134,21 @@ public class FiltreAntiSpam {
 			}
 		}
 		return mots;
+	}
+	
+	public void verifyMail(String path) {
+		//	TODO read file and gate binary vector x
+		
+		int dicoSize = 100;
+		double PMailSpam = 0;
+		double PMailHam = 0;
+		
+		//SPAM
+		for(int i=0; i<dicoSize; i++){
+			//TODO aurel
+		}
+		PMailSpam = Math.log(this.PSpam) + PMailSpam;
+		
 	}
 
 	/**
