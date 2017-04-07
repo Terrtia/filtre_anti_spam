@@ -1,14 +1,80 @@
 package filtre_anti_spam;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class FiltreAntiSpam {
 	
 	public double[] bSpam;
 	public double[] bHam;
+	private ArrayList<String> dico;
 
 	public FiltreAntiSpam() {
-		// TODO Auto-generated constructor stub
+		dico = new ArrayList<>();
+	}
+	
+	public void chargerDico(String fichier){
+		String ligne;
+		
+		//lecture du fichier texte	
+		try{
+			InputStream ips=new FileInputStream(fichier); 
+			InputStreamReader ipsr=new InputStreamReader(ips);
+			BufferedReader br=new BufferedReader(ipsr);
+			
+			while ((ligne=br.readLine())!=null){
+				System.out.println(ligne);
+				if(ligne.length() >= 3){
+					dico.add(ligne);
+				}
+			}
+			br.close(); 
+		}		
+		catch (Exception e){
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+	public boolean[] lireMessage(String fichier){
+		boolean message[] = new boolean[dico.size()];
+		for(int i = 0; i < message.length;i++){
+			message[i] = false;
+		}
+		
+		String ligne;
+		int index;
+		String sac[];
+		String regex = " ?[,;:...]? | [,;:...]? ?|[,;:...]";
+		
+		//lecture du fichier texte	
+		try{
+			InputStream ips=new FileInputStream(fichier); 
+			InputStreamReader ipsr=new InputStreamReader(ips);
+			BufferedReader br=new BufferedReader(ipsr);
+			
+			while ((ligne=br.readLine())!=null){
+				sac = ligne.split(regex);
+				for(String mot : sac){
+					if(mot.length()>=3){
+						mot = mot.toUpperCase();
+						if(dico.contains(mot)){
+							index = dico.indexOf(mot);
+							message[index] = true;
+						}
+					}
+				}
+			}
+			br.close(); 
+		}		
+		catch (Exception e){
+			System.out.println(e.toString());
+		}
+		
+		return message;
 	}
 	
 	public void apprentissage() {
