@@ -136,18 +136,54 @@ public class FiltreAntiSpam {
 		return mots;
 	}
 	
-	public void verifyMail(String path) {
+	public void verifyMail(String path) throws Exception {
 		//	TODO read file and gate binary vector x
+		int[] x = new int[1000]; //provisoire, represente le vecteur booleen x du mail
+		// TODO verif du vecteur ?
 		
-		int dicoSize = 100;
+		int dicoSize = 1000;
 		double PMailSpam = 0;
 		double PMailHam = 0;
 		
+		int j = -1;
+		
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
-			//TODO aurel
+			j = x[i];
+			if(j == 1){
+				PMailSpam = Math.log(this.bSpam[i]) + PMailSpam;
+			} else if(j == 0){
+				PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
+			} else {
+				throw new Exception("Critical Eror");
+			}
 		}
 		PMailSpam = Math.log(this.PSpam) + PMailSpam;
+		
+		//HAM
+		for(int i=0; i<dicoSize; i++){
+			j = x[i];
+			if(j == 1){
+				PMailHam = Math.log(this.bHam[i]) + PMailHam;
+			} else if(j == 0){
+				PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
+			} else {
+				throw new Exception("Critical Eror");
+			}
+		}
+		PMailHam = Math.log(this.PHam) + PMailHam;
+		
+		// Estimation SPAM ou HAM
+		double res = Math.max(PMailSpam, PMailHam);
+		if(res == PMailSpam){
+			// mail considere comme un SPAM
+		} else if(res == PMailHam){
+			// mail considere comme un HAM
+		} else {
+			throw new Exception("Critical Eror");
+		}
+		
+		//TODO affichage
 		
 	}
 
