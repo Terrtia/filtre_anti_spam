@@ -9,6 +9,8 @@ import java.util.ArrayList;
 
 public class FiltreAntiSpam {
 	
+	public static final int epsilon = 1;
+	
 	public double[] bSpam;
 	public double[] bHam;
 	
@@ -22,6 +24,7 @@ public class FiltreAntiSpam {
 
 		dico = new ArrayList<>();
 		chargerDico(fichier);
+		
 	}
 	
 	public void chargerDico(String fichier){
@@ -32,7 +35,9 @@ public class FiltreAntiSpam {
 			BufferedReader br=new BufferedReader(ipsr);
 			
 			while ((ligne=br.readLine())!=null){
-				System.out.println(ligne);
+				// DEBUG
+				//System.out.println(ligne);
+				
 				if(ligne.length() >= 3){
 					dico.add(ligne);
 				}
@@ -40,12 +45,12 @@ public class FiltreAntiSpam {
 			br.close(); 
 		}		
 		catch (Exception e){
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 		
 	}
 	
-	public boolean[] lireMessage(String fichier){
+	public boolean[] createMailVector(String fichier){
 		boolean message[] = new boolean[dico.size()];
 		for(int i = 0; i < message.length;i++){
 			message[i] = false;
@@ -75,7 +80,7 @@ public class FiltreAntiSpam {
 			br.close(); 
 		}		
 		catch (Exception e){
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 		
 		return message;
@@ -91,32 +96,49 @@ public class FiltreAntiSpam {
 		String SpamDirectory = "baseapp/spam";
 		String HamDirectory = "baseapp/ham";
 		
-		int[] apparitionMotsSpam = apprentissageMail(SpamDirectory); 
-		int[] apparitionMotsHam = apprentissageMail(HamDirectory); 
+		System.out.println();
+		System.out.println();
+		System.out.print("Apprentissage");
 		
-		this.bSpam = new double[dicoSize];
-		this.bHam = new double[dicoSize];
-		
-		
-		//SPAM, estimation des probabilites par les frequences
-		for(int i=0; i<nbSpam; i++){
-			this.bSpam[i] = (double) (apparitionMotsSpam[i] / nbSpam);
+		int[] apparitionMotsSpam;
+		int[] apparitionMotsHam;
+		try {
+			apparitionMotsSpam = apprentissageOccurrenceMotsMail(SpamDirectory, nbSpam);
+			System.out.print(".");
+			apparitionMotsHam = apprentissageOccurrenceMotsMail(HamDirectory, nbHam); 
+			System.out.print(".");
+			
+			this.bSpam = new double[dicoSize];
+			this.bHam = new double[dicoSize];
+			
+			
+			//SPAM, estimation des probabilites par les frequences
+			for(int i=0; i<nbSpam; i++){
+				this.bSpam[i] = (double) ( (double) (apparitionMotsSpam[i] + epsilon) / (double) (nbSpam + 2*epsilon) );
+			}
+			
+			//HAM, estimation des probabilites par les frequences
+			for(int i=0; i<nbHam; i++){
+				this.bHam[i] = (double) ( (double) (apparitionMotsHam[i] + epsilon) / (double) (nbHam + 2*epsilon) );
+			}
+			
+			System.out.print(".");
+			
+			//SPAM, estimation Probabilite a posteriori P(Y = SPAM)
+			this.PSpam = (double) ( (double) nbSpam / (double) nbMail) ;
+			
+			//HAM, estimation Probabilite a posteriori P(Y = HAM)
+			this.PHam = 1 - this.PSpam;
+			
+			System.out.println("    FAIT");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		//HAM, estimation des probabilites par les frequences
-		for(int i=0; i<nbHam; i++){
-			this.bHam[i] = (double) (apparitionMotsHam[i] / nbHam);
-		}
-		
-		//SPAM, estimation Probabilite a posteriori P(Y = SPAM)
-		this.PSpam = (double) (nbSpam / nbMail) ;
-		
-		//HAM, estimation Probabilite a posteriori P(Y = HAM)
-		this.PHam = 1 - this.PSpam;
-		
+
 	}
 	
-	public int[] apprentissageMail(String directoryName) {
+	public int[] apprentissageOccurrenceMotsMail(String directoryName, int endIndex) throws Exception {
 		int mots[] = new int[dico.size()];
 		for(int i = 0; i < mots.length;i++){
 			mots[i] = 0;
@@ -124,35 +146,40 @@ public class FiltreAntiSpam {
 		boolean vecteur[];
 		String [] files;
 		File repertoire = new File(directoryName);
-		files=repertoire.list();
-		for(String fileName : files){
-			vecteur = lireMessage(fileName);
+		files= repertoire.list();
+		
+		if(endIndex > files.length){
+			throw new Exception("taille de la base d apprentissage: " + directoryName + " invalide");
+		}
+		
+		for(int j=0; j<endIndex; j++){
+			vecteur = createMailVector(directoryName + "/" + files[j]);
 			for(int i = 0; i < vecteur.length;i++){
 				if(vecteur[i]){
 					mots[i]++;
 				}
 			}
 		}
+		
 		return mots;
 	}
 	
 	public void verifyMail(String path) throws Exception {
-		//	TODO read file and gate binary vector x
-		int[] x = new int[1000]; //provisoire, represente le vecteur booleen x du mail
-		// TODO verif du vecteur ?
+		//read file and get binary vector x
+		boolean[] x = this.createMailVector(path);
 		
 		int dicoSize = 1000;
 		double PMailSpam = 0;
 		double PMailHam = 0;
 		
-		int j = -1;
+		boolean j;
 		
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
-			if(j == 1){
+			if(j == true){
 				PMailSpam = Math.log(this.bSpam[i]) + PMailSpam;
-			} else if(j == 0){
+			} else if(j == false){
 				PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
 			} else {
 				throw new Exception("Critical Eror");
@@ -163,9 +190,9 @@ public class FiltreAntiSpam {
 		//HAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
-			if(j == 1){
+			if(j == true){
 				PMailHam = Math.log(this.bHam[i]) + PMailHam;
-			} else if(j == 0){
+			} else if(j == false){
 				PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
 			} else {
 				throw new Exception("Critical Eror");
@@ -191,8 +218,17 @@ public class FiltreAntiSpam {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		FiltreAntiSpam fas = new FiltreAntiSpam("dictionnaire1000en.txt");
 
+		fas.apprentissage();
+		
+		// DEBUG
+		for(int i=0; i<1000; i++){
+			System.out.println("bjSPam= " + fas.bSpam[i] + " | bjHam= " + fas.bHam[i]);
+		}
+		System.out.println();
+		System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);
+		
 	}
 
 }
