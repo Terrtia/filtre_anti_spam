@@ -164,9 +164,10 @@ public class FiltreAntiSpam {
 		return mots;
 	}
 	
-	public void verifyMail(String path) throws Exception {
+	public boolean verifyMail(String path) throws Exception {
 		//read file and get binary vector x
 		boolean[] x = this.createMailVector(path);
+		System.out.println(x.length);
 		
 		int dicoSize = 1000;
 		double PMailSpam = 0;
@@ -182,7 +183,7 @@ public class FiltreAntiSpam {
 			} else if(j == false){
 				PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
 			} else {
-				throw new Exception("Critical Eror");
+				throw new Exception("Critical Error");
 			}
 		}
 		PMailSpam = Math.log(this.PSpam) + PMailSpam;
@@ -195,7 +196,7 @@ public class FiltreAntiSpam {
 			} else if(j == false){
 				PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
 			} else {
-				throw new Exception("Critical Eror");
+				throw new Exception("Critical Error");
 			}
 		}
 		PMailHam = Math.log(this.PHam) + PMailHam;
@@ -204,13 +205,64 @@ public class FiltreAntiSpam {
 		double res = Math.max(PMailSpam, PMailHam);
 		if(res == PMailSpam){
 			// mail considere comme un SPAM
+			return true;
 		} else if(res == PMailHam){
 			// mail considere comme un HAM
+			return false;
 		} else {
-			throw new Exception("Critical Eror");
+			throw new Exception("Critical Error");
 		}
 		
 		//TODO affichage
+		
+	}
+	
+	public void test(String directoryPath) {
+		String [] files;
+		File repertoire;
+		boolean res;
+		
+		System.out.println();
+		System.out.println("Test:");
+		System.out.println();
+		
+		//TEST SPAM
+		repertoire = new File(directoryPath + "/spam");
+		files= repertoire.list();
+		for(String fileName : files){
+			System.out.print("SPAM " + fileName);
+			try {
+				res = this.verifyMail(directoryPath + "/spam/" + fileName);
+				if(res == true){
+					System.out.print("identifie comme un SPAM");
+					System.out.println();
+				} else {
+					System.out.print("identifie comme un HAM  ***Erreur***");
+					System.out.println();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//TEST HAM
+		repertoire = new File(directoryPath + "/ham");
+		files= repertoire.list();
+		for(String fileName : files){
+			System.out.print("HAM " + fileName);
+			try {
+				res = this.verifyMail(directoryPath + "/ham/" + fileName);
+				if(res == true){
+					System.out.print("identifie comme un SPAM  ***Erreur***");
+					System.out.println();
+				} else {
+					System.out.print("identifie comme un HAM");
+					System.out.println();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 		
 	}
 
@@ -223,11 +275,13 @@ public class FiltreAntiSpam {
 		fas.apprentissage();
 		
 		// DEBUG
-		for(int i=0; i<1000; i++){
+		/*for(int i=0; i<1000; i++){
 			System.out.println("bjSPam= " + fas.bSpam[i] + " | bjHam= " + fas.bHam[i]);
 		}
 		System.out.println();
-		System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);
+		System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);*/
+		
+		fas.test("basetest");
 		
 	}
 
