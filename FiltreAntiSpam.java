@@ -131,6 +131,7 @@ public class FiltreAntiSpam {
 			//HAM, estimation Probabilite a posteriori P(Y = HAM)
 			this.PHam = 1 - this.PSpam;
 			
+			//System.out.println("PHam : "+PHam+"PSpam : "+PSpam);
 			System.out.println("    FAIT");
 			
 		} catch (Exception e) {
@@ -161,7 +162,7 @@ public class FiltreAntiSpam {
 				}
 			}
 		}
-		
+
 		return mots;
 	}
 	
@@ -186,7 +187,11 @@ public class FiltreAntiSpam {
 				throw new Exception("Critical Error");
 			}
 		}
+		System.out.println("PSpam : "+PSpam);
+		System.out.println("log(PSpam) : "+Math.log(PSpam));
+		System.out.println("PMailSpam : "+PMailSpam);
 		PMailSpam = Math.log(this.PSpam) + PMailSpam;
+		System.out.println("PMailSpam : "+PMailSpam);
 		
 		//HAM
 		for(int i=0; i<dicoSize; i++){
