@@ -219,12 +219,12 @@ public class FiltreAntiSpam {
 		
 		// Estimation SPAM ou HAM
 		double res = Math.max(PMailSpam, PMailHam);
-		if(res == PMailSpam){
-			// mail considere comme un SPAM
-			return true;
-		} else if(res == PMailHam){
+		if(res == PMailHam){
 			// mail considere comme un HAM
 			return false;
+		} else if(res == PMailSpam){
+			// mail considere comme un SPAM
+			return true;
 		} else {
 			throw new Exception("Critical Error");
 		}
