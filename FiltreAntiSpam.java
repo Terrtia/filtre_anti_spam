@@ -169,42 +169,53 @@ public class FiltreAntiSpam {
 	public boolean verifyMail(String path) throws Exception {
 		//read file and get binary vector x
 		boolean[] x = this.createMailVector(path);
-		System.out.println(x.length);
 		
 		int dicoSize = dico.size();
 		double PMailSpam = 0;
 		double PMailHam = 0;
 		
+		double PXeqx = 500;
+		
 		boolean j;
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
+			/*if(this.bSpam[i]== 0 |this.bSpam[i]== 1){
+				System.out.println("0.0 : "+ this.bSpam[i]);
+			}*/
 			if(j == true){
-				PMailSpam = Math.log(this.bSpam[i]) + PMailSpam;
+				PMailSpam += this.bSpam[i] > 0 ? Math.log(this.bSpam[i]) : 0;
+				//PMailSpam = Math.log(this.bSpam[i]) + PMailSpam;
+				//System.out.println("PMailSpam true: "+PMailSpam);
 			} else if(j == false){
-				PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
+				PMailSpam += 1 - this.bSpam[i] > 0 ? Math.log(1 - this.bSpam[i]) : 0;
+				//PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
+				//System.out.println("PMailSpam false: "+PMailSpam);
 			} else {
 				throw new Exception("Critical Error");
 			}
 		}
-		System.out.println("PSpam : "+PSpam);
-		System.out.println("log(PSpam) : "+Math.log(PSpam));
-		System.out.println("PMailSpam : "+PMailSpam);
+		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
 		PMailSpam = Math.log(this.PSpam) + PMailSpam;
-		System.out.println("PMailSpam : "+PMailSpam);
 		
 		//HAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
 			if(j == true){
-				PMailHam = Math.log(this.bHam[i]) + PMailHam;
+				PMailHam += this.bHam[i] > 0 ? Math.log(this.bHam[i]) : 0;
+				//PMailHam = Math.log(this.bHam[i]) + PMailHam;
 			} else if(j == false){
-				PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
+				PMailHam += 1 - this.bHam[i] > 0 ? Math.log(1 - this.bHam[i]) : 0;
+				//PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
 			} else {
 				throw new Exception("Critical Error");
 			}
 		}
-		PMailHam = Math.log(this.PHam) + PMailHam;
+		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
+		//PMailHam = Math.log(this.PHam) + PMailHam;
+		
+		System.out.println(": P(Y=SPAM | X=x) =" + PMailSpam + ", P(Y=HAM | X=x) =" + PMailHam);
+		System.out.print("              =>");
 		
 		// Estimation SPAM ou HAM
 		double res = Math.max(PMailSpam, PMailHam);
@@ -263,11 +274,11 @@ public class FiltreAntiSpam {
 			try {
 				res = this.verifyMail(directoryPath + "/ham/" + fileName);
 				if(res == true){
-					System.out.print("identifie comme un SPAM  ***Erreur***");
+					System.out.print(" identifie comme un SPAM  ***Erreur***");
 					System.out.println();
 					hamError++;
 				} else {
-					System.out.print("identifie comme un HAM");
+					System.out.print(" identifie comme un HAM");
 					System.out.println();
 				}
 			} catch (Exception e) {
@@ -275,8 +286,8 @@ public class FiltreAntiSpam {
 			}
 		}
 		
-		System.out.println(spamError+" erreurs de spam "+spamSize+" spams, pourcentage d'erreur : "+ (spamError/spamSize*100) + "%");
-		System.out.println(hamError+" erreurs de ham "+hamSize+" hams, pourcentage d'erreur : "+ (hamError/hamSize*100) + "%");
+		System.out.println(spamError+" erreurs de spam sur "+spamSize+" spams, pourcentage d'erreur : "+ ((float)spamError/(float)spamSize*100) + "%");
+		System.out.println(hamError+" erreurs de ham sur "+hamSize+" hams, pourcentage d'erreur : "+ ((float)hamError/(float)hamSize*100) + "%");
 		
 	}
 
