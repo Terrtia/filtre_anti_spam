@@ -196,7 +196,7 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
-		PMailSpam = Math.log(this.PSpam) + PMailSpam;
+		//PMailSpam = Math.log(this.PSpam) + PMailSpam;
 		
 		//HAM
 		for(int i=0; i<dicoSize; i++){
