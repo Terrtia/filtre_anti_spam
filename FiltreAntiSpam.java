@@ -30,6 +30,7 @@ public class FiltreAntiSpam {
 	public void chargerDico(String fichier){
 		String ligne;
 		try{
+			System.out.println(fichier);
 			InputStream ips=new FileInputStream(fichier); 
 			InputStreamReader ipsr=new InputStreamReader(ips);
 			BufferedReader br=new BufferedReader(ipsr);
@@ -89,7 +90,7 @@ public class FiltreAntiSpam {
 	public void apprentissage() {
 		
 		//TODO GET VARIABLE
-		int dicoSize = 1000;
+		int dicoSize = dico.size();
 		int nbSpam = 500;
 		int nbHam = 500;
 		int nbMail = nbSpam + nbHam;
@@ -169,12 +170,11 @@ public class FiltreAntiSpam {
 		boolean[] x = this.createMailVector(path);
 		System.out.println(x.length);
 		
-		int dicoSize = 1000;
+		int dicoSize = dico.size();
 		double PMailSpam = 0;
 		double PMailHam = 0;
 		
 		boolean j;
-		
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
@@ -212,9 +212,7 @@ public class FiltreAntiSpam {
 		} else {
 			throw new Exception("Critical Error");
 		}
-		
 		//TODO affichage
-		
 	}
 	
 	public void test(String directoryPath) {
@@ -226,10 +224,15 @@ public class FiltreAntiSpam {
 		System.out.println("Test:");
 		System.out.println();
 		
+		int spamError = 0;
+		int hamError = 0;
+		int spamSize=0;
+		int	hamSize = 0;
 		//TEST SPAM
 		repertoire = new File(directoryPath + "/spam");
 		files= repertoire.list();
 		for(String fileName : files){
+			spamSize++;
 			System.out.print("SPAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/spam/" + fileName);
@@ -239,6 +242,7 @@ public class FiltreAntiSpam {
 				} else {
 					System.out.print("identifie comme un HAM  ***Erreur***");
 					System.out.println();
+					spamError++;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -249,12 +253,14 @@ public class FiltreAntiSpam {
 		repertoire = new File(directoryPath + "/ham");
 		files= repertoire.list();
 		for(String fileName : files){
+			hamSize++;
 			System.out.print("HAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/ham/" + fileName);
 				if(res == true){
 					System.out.print("identifie comme un SPAM  ***Erreur***");
 					System.out.println();
+					hamError++;
 				} else {
 					System.out.print("identifie comme un HAM");
 					System.out.println();
@@ -263,6 +269,9 @@ public class FiltreAntiSpam {
 				e.printStackTrace();
 			}
 		}
+		
+		System.out.println(spamError+" erreurs de spam "+spamSize+" spams, pourcentage d'erreur : "+ (spamError/spamSize*100) + "%");
+		System.out.println(hamError+" erreurs de ham "+hamSize+" hams, pourcentage d'erreur : "+ (hamError/hamSize*100) + "%");
 		
 	}
 
