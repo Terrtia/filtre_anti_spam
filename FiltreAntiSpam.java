@@ -180,48 +180,35 @@ public class FiltreAntiSpam {
 		//SPAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
-			/*if(this.bSpam[i]== 0 |this.bSpam[i]== 1){
-				System.out.println("0.0 : "+ this.bSpam[i]);
-			}*/
 			if(j == true){
 				PMailSpam += this.bSpam[i] > 0 ? Math.log(this.bSpam[i]) : 0;
-				//PMailSpam = Math.log(this.bSpam[i]) + PMailSpam;
-				//System.out.println("PMailSpam true: "+PMailSpam);
 			} else if(j == false){
 				PMailSpam += 1 - this.bSpam[i] > 0 ? Math.log(1 - this.bSpam[i]) : 0;
-				//PMailSpam = Math.log(1 - this.bSpam[i]) + PMailSpam;
-				//System.out.println("PMailSpam false: "+PMailSpam);
 			} else {
 				throw new Exception("Critical Error");
 			}
 		}
 		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
-		//PMailSpam = Math.exp(PMailSpam);
-		
-		//PMailSpam = Math.log(:this.PSpam) + PMailSpam;
 		
 		//HAM
 		for(int i=0; i<dicoSize; i++){
 			j = x[i];
 			if(j == true){
 				PMailHam += this.bHam[i] > 0 ? Math.log(this.bHam[i]) : 0;
-				//PMailHam = Math.log(this.bHam[i]) + PMailHam;
 			} else if(j == false){
 				PMailHam += 1 - this.bHam[i] > 0 ? Math.log(1 - this.bHam[i]) : 0;
-				//PMailHam = Math.log(1 - this.bHam[i]) + PMailHam;
 			} else {
 				throw new Exception("Critical Error");
 			}
 		}
 		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
-		//PMailHam = Math.exp(PMailHam);
-		//PMailHam = Math.log(this.PHam) + PMailHam;
+		
 		double px = Math.exp(PMailSpam+PMailHam);
 		
 		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
 		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
 		
-		System.out.println(": P(Y=SPAM | X=x) =" + pSpam/px + ", P(Y=HAM | X=x) =" + pHam/px);
+		System.out.println(": P(Y=SPAM | X=x) =" + pSpam + ", P(Y=HAM | X=x) =" + pHam);
 		System.out.print("              =>");
 		
 		// Estimation SPAM ou HAM
@@ -401,21 +388,13 @@ public class FiltreAntiSpam {
 					System.out.println("D’après ’"+classifieur+"’, le message ’"+mail+"’ est un HAM !");
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}else{
 			//execution standard
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 	
-			fas.apprentissage(500,500,"dictionnaire1000en.txt");
-			
-			// DEBUG
-			/*for(int i=0; i<1000; i++){
-				System.out.println("bjSPam= " + fas.bSpam[i] + " | bjHam= " + fas.bHam[i]);
-			}
-			System.out.println();
-			System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);*/
+			fas.apprentissage(100,200,"dictionnaire1000en.txt");
 			
 			fas.test("basetest");
 		}
