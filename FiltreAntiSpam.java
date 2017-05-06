@@ -1,8 +1,11 @@
 package filtre_anti_spam;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -20,10 +23,10 @@ public class FiltreAntiSpam {
 	private ArrayList<String> dico;
 
 
-	public FiltreAntiSpam(String fichier) {
+	public FiltreAntiSpam() {
 
 		dico = new ArrayList<>();
-		chargerDico(fichier);
+		
 		
 	}
 	
@@ -87,13 +90,11 @@ public class FiltreAntiSpam {
 		return message;
 	}
 	
-	public void apprentissage() {
-		
+	public void apprentissage(int nbHam,int nbSpam,String fichier) {
+		chargerDico(fichier);
 		//TODO GET VARIABLE
 		int dicoSize = dico.size();
-		int nbSpam = 500;
-		int nbHam = 500;
-		int nbMail = nbSpam + nbHam;
+		int nbMail =nbSpam + nbHam;
 		String SpamDirectory = "baseapp/spam";
 		String HamDirectory = "baseapp/ham";
 		
@@ -196,7 +197,7 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
-		//PMailSpam = Math.log(this.PSpam) + PMailSpam;
+		//PMailSpam = Math.log(:this.PSpam) + PMailSpam;
 		
 		//HAM
 		for(int i=0; i<dicoSize; i++){
@@ -290,24 +291,129 @@ public class FiltreAntiSpam {
 		System.out.println(hamError+" erreurs de ham sur "+hamSize+" hams, pourcentage d'erreur : "+ ((float)hamError/(float)hamSize*100) + "%");
 		
 	}
+	
+	private void saveClassifieur(String classifieur) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(PSpam+"\n");
+		sb.append(PHam+"\n");
+		
+		sb.append("Dico\n");
+		for(int i = 0; i < dico.size();i++){
+			sb.append(dico.get(i)+"\n");
+		}
+		
+		sb.append("bSpam\n");
+		for(int i = 0; i < bSpam.length;i++){
+			sb.append(bSpam[i]+"\n");
+		}
+		
+		sb.append("bHam\n");
+		for(int i = 0; i < bHam.length;i++){
+			sb.append(bHam[i]+"\n");
+		}
+		
+		FileWriter fstream;
+		try {
+			fstream = new FileWriter(classifieur);
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.write(sb.toString());
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    System.out.println("Classifieur enregistré dans : "+classifieur);
+	    
+		
+	}
+	
+	private void loadClassifieur(String classifieur) {
+		String ligne;
+		int i = 0;
+		try{
+			InputStream ips=new FileInputStream(classifieur); 
+			InputStreamReader ipsr=new InputStreamReader(ips);
+			BufferedReader br=new BufferedReader(ipsr);
+			
+			ligne=br.readLine();
+			PSpam = Double.parseDouble(ligne);
+			
+			ligne=br.readLine();
+			PHam = Double.parseDouble(ligne);
+			
+			ligne = br.readLine();
+			while (!(ligne=br.readLine()).equals("bSpam")){
+				dico.add(ligne);
+			}
+			
+			bSpam = new double[dico.size()];
+			bHam = new double[dico.size()];
+			while (!(ligne=br.readLine()).equals("bHam")){
+				bSpam[i] = Double.parseDouble(ligne);
+				i++;
+			}
+			
+			i = 0;
+			while ((ligne=br.readLine())!=null){
+				bHam[i] = Double.parseDouble(ligne);
+				i++;
+			}
+			br.close(); 
+		}		
+		catch (Exception e){
+			e.printStackTrace();
+		}
+
+		
+	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		FiltreAntiSpam fas = new FiltreAntiSpam("dictionnaire1000en.txt");
-
-		fas.apprentissage();
 		
-		// DEBUG
-		/*for(int i=0; i<1000; i++){
-			System.out.println("bjSPam= " + fas.bSpam[i] + " | bjHam= " + fas.bHam[i]);
+		if(args.length == 4){
+			//sauvegarde du classifieur
+			String classifieur = args[0];
+			String baseApp = args[1];
+			int nbHam = Integer.parseInt(args[2]); 
+			int nbSpam = Integer.parseInt(args[3]); 
+			FiltreAntiSpam fas = new FiltreAntiSpam();
+			fas.apprentissage(nbHam,nbSpam,"dictionnaire1000en.txt");
+			fas.saveClassifieur(classifieur);
+		}else if (args.length == 2){
+			//chargement du classifieur et execution
+			String classifieur = args[0];
+			String mail = args[1];
+			FiltreAntiSpam fas = new FiltreAntiSpam();
+			fas.loadClassifieur(classifieur);
+			try {
+				if(fas.verifyMail(mail)){
+					System.out.println("D’après ’"+classifieur+"’, le message ’"+mail+"’ est un SPAM !");
+				}else{
+					System.out.println("D’après ’"+classifieur+"’, le message ’"+mail+"’ est un HAM !");
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else{
+			//execution standard
+			FiltreAntiSpam fas = new FiltreAntiSpam();
+	
+			fas.apprentissage(500,500,"dictionnaire1000en.txt");
+			
+			// DEBUG
+			/*for(int i=0; i<1000; i++){
+				System.out.println("bjSPam= " + fas.bSpam[i] + " | bjHam= " + fas.bHam[i]);
+			}
+			System.out.println();
+			System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);*/
+			
+			fas.test("basetest");
 		}
-		System.out.println();
-		System.out.println("P(Y=SPAM)= " + fas.PSpam + " | P(Y=HAM)= " + fas.PHam);*/
-		
-		fas.test("basetest");
-		
 	}
 
+	
+
+	
 }
