@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class FiltreAntiSpam {
 	
-	public static final int epsilon = 1;
+	public static final double epsilon = 1;
 	
 	public double[] bSpam;
 	public double[] bHam;
@@ -197,6 +197,8 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
+		PMailSpam = Math.exp(PMailSpam);
+		
 		//PMailSpam = Math.log(:this.PSpam) + PMailSpam;
 		
 		//HAM
@@ -213,6 +215,7 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
+		PMailHam = Math.exp(PMailHam);
 		//PMailHam = Math.log(this.PHam) + PMailHam;
 		
 		System.out.println(": P(Y=SPAM | X=x) =" + PMailSpam + ", P(Y=HAM | X=x) =" + PMailHam);
@@ -400,7 +403,7 @@ public class FiltreAntiSpam {
 			//execution standard
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 	
-			fas.apprentissage(500,500,"dictionnaire1000en.txt");
+			fas.apprentissage(50,100,"dictionnaire1000en.txt");
 			
 			// DEBUG
 			/*for(int i=0; i<1000; i++){
