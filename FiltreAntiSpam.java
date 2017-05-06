@@ -115,12 +115,12 @@ public class FiltreAntiSpam {
 			
 			
 			//SPAM, estimation des probabilites par les frequences
-			for(int i=0; i<nbSpam; i++){
+			for(int i=0; i<dicoSize; i++){
 				this.bSpam[i] = (double) ( (double) (apparitionMotsSpam[i] + epsilon) / (double) (nbSpam + 2*epsilon) );
 			}
 			
 			//HAM, estimation des probabilites par les frequences
-			for(int i=0; i<nbHam; i++){
+			for(int i=0; i<dicoSize; i++){
 				this.bHam[i] = (double) ( (double) (apparitionMotsHam[i] + epsilon) / (double) (nbHam + 2*epsilon) );
 			}
 			
@@ -172,10 +172,9 @@ public class FiltreAntiSpam {
 		boolean[] x = this.createMailVector(path);
 		
 		int dicoSize = dico.size();
-		double PMailSpam = 0;
-		double PMailHam = 0;
+		double PMailSpam = 0.;
+		double PMailHam = 0.;
 		
-		double PXeqx = 500;
 		
 		boolean j;
 		//SPAM
@@ -197,7 +196,7 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailSpam += this.PSpam > 0 ? Math.log(this.PSpam) : 0;
-		PMailSpam = Math.exp(PMailSpam);
+		//PMailSpam = Math.exp(PMailSpam);
 		
 		//PMailSpam = Math.log(:this.PSpam) + PMailSpam;
 		
@@ -215,18 +214,23 @@ public class FiltreAntiSpam {
 			}
 		}
 		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
-		PMailHam = Math.exp(PMailHam);
+		//PMailHam = Math.exp(PMailHam);
 		//PMailHam = Math.log(this.PHam) + PMailHam;
+		double px = PMailSpam+PMailHam;
+
 		
-		System.out.println(": P(Y=SPAM | X=x) =" + PMailSpam + ", P(Y=HAM | X=x) =" + PMailHam);
-		System.out.print("              =>");
+		//System.out.println(": P(Y=SPAM | X=x) =" + PMailSpam/px + ", P(Y=HAM | X=x) =" + PMailHam/px);
+		//System.out.print("              =>");
 		
 		// Estimation SPAM ou HAM
-		double res = Math.max(PMailSpam, PMailHam);
-		if(res == PMailHam){
+
+		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
+		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
+		double res = Math.max(pSpam, pHam);
+		if(res == pHam){
 			// mail considere comme un HAM
 			return false;
-		} else if(res == PMailSpam){
+		} else if(res == pSpam){
 			// mail considere comme un SPAM
 			return true;
 		} else {
@@ -241,7 +245,7 @@ public class FiltreAntiSpam {
 		boolean res;
 		
 		System.out.println();
-		System.out.println("Test:");
+		//System.out.println("Test:");
 		System.out.println();
 		
 		int spamError = 0;
@@ -253,15 +257,15 @@ public class FiltreAntiSpam {
 		files= repertoire.list();
 		for(String fileName : files){
 			spamSize++;
-			System.out.print("SPAM " + fileName);
+			//System.out.print("SPAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/spam/" + fileName);
 				if(res == true){
-					System.out.print("identifie comme un SPAM");
-					System.out.println();
+					//System.out.print("identifie comme un SPAM");
+					//System.out.println();
 				} else {
-					System.out.print("identifie comme un HAM  ***Erreur***");
-					System.out.println();
+					//System.out.print("identifie comme un HAM  ***Erreur***");
+					//System.out.println();
 					spamError++;
 				}
 			} catch (Exception e) {
@@ -274,16 +278,16 @@ public class FiltreAntiSpam {
 		files= repertoire.list();
 		for(String fileName : files){
 			hamSize++;
-			System.out.print("HAM " + fileName);
+			//System.out.print("HAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/ham/" + fileName);
 				if(res == true){
-					System.out.print(" identifie comme un SPAM  ***Erreur***");
-					System.out.println();
+					//System.out.print(" identifie comme un SPAM  ***Erreur***");
+					//System.out.println();
 					hamError++;
 				} else {
-					System.out.print(" identifie comme un HAM");
-					System.out.println();
+					//System.out.print(" identifie comme un HAM");
+					//System.out.println();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -403,7 +407,7 @@ public class FiltreAntiSpam {
 			//execution standard
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 	
-			fas.apprentissage(50,100,"dictionnaire1000en.txt");
+			fas.apprentissage(500,500,"dictionnaire1000en.txt");
 			
 			// DEBUG
 			/*for(int i=0; i<1000; i++){
