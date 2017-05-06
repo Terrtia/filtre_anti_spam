@@ -216,16 +216,17 @@ public class FiltreAntiSpam {
 		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
 		//PMailHam = Math.exp(PMailHam);
 		//PMailHam = Math.log(this.PHam) + PMailHam;
-		double px = PMailSpam+PMailHam;
-
+		double px = Math.exp(PMailSpam+PMailHam);
 		
-		//System.out.println(": P(Y=SPAM | X=x) =" + PMailSpam/px + ", P(Y=HAM | X=x) =" + PMailHam/px);
-		//System.out.print("              =>");
+		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
+		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
+		
+		System.out.println(": P(Y=SPAM | X=x) =" + pSpam/px + ", P(Y=HAM | X=x) =" + pHam/px);
+		System.out.print("              =>");
 		
 		// Estimation SPAM ou HAM
 
-		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
-		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
+		
 		double res = Math.max(pSpam, pHam);
 		if(res == pHam){
 			// mail considere comme un HAM
@@ -245,7 +246,7 @@ public class FiltreAntiSpam {
 		boolean res;
 		
 		System.out.println();
-		//System.out.println("Test:");
+		System.out.println("Test:");
 		System.out.println();
 		
 		int spamError = 0;
@@ -257,15 +258,15 @@ public class FiltreAntiSpam {
 		files= repertoire.list();
 		for(String fileName : files){
 			spamSize++;
-			//System.out.print("SPAM " + fileName);
+			System.out.print("SPAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/spam/" + fileName);
 				if(res == true){
-					//System.out.print("identifie comme un SPAM");
-					//System.out.println();
+					System.out.print("identifie comme un SPAM");
+					System.out.println();
 				} else {
-					//System.out.print("identifie comme un HAM  ***Erreur***");
-					//System.out.println();
+					System.out.print("identifie comme un HAM  ***Erreur***");
+					System.out.println();
 					spamError++;
 				}
 			} catch (Exception e) {
@@ -278,16 +279,16 @@ public class FiltreAntiSpam {
 		files= repertoire.list();
 		for(String fileName : files){
 			hamSize++;
-			//System.out.print("HAM " + fileName);
+			System.out.print("HAM " + fileName);
 			try {
 				res = this.verifyMail(directoryPath + "/ham/" + fileName);
 				if(res == true){
-					//System.out.print(" identifie comme un SPAM  ***Erreur***");
-					//System.out.println();
+					System.out.print(" identifie comme un SPAM  ***Erreur***");
+					System.out.println();
 					hamError++;
 				} else {
-					//System.out.print(" identifie comme un HAM");
-					//System.out.println();
+					System.out.print(" identifie comme un HAM");
+					System.out.println();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
