@@ -24,6 +24,9 @@ public class FiltreAntiSpam implements Serializable {
 	
 	public double PSpam;
 	public double PHam;
+	
+	public int nbSpam;
+	public int nbHam;
 
 	private ArrayList<String> dico;
 
@@ -97,7 +100,9 @@ public class FiltreAntiSpam implements Serializable {
 	
 	public void apprentissage(int nbHam,int nbSpam,String fichier) {
 		chargerDico(fichier);
-		//TODO GET VARIABLE
+		// VARIABLE
+		this.nbHam = nbHam;
+		this.nbSpam = nbSpam;
 		int dicoSize = dico.size();
 		int nbMail =nbSpam + nbHam;
 		String SpamDirectory = "baseapp/spam";
@@ -147,6 +152,61 @@ public class FiltreAntiSpam implements Serializable {
 	}
 	
 	private void apprentissage(String mail, int spam) {
+		
+		boolean[] vector = this.createMailVector(mail);
+		int dicoSize = this.dico.size();
+		double nj;
+		
+		System.out.println("Apprentissage .");
+		
+		// SPAM
+		if(spam == 0){
+			this.nbSpam++;
+			
+			//SPAM, estimation des probabilites par les frequences
+			for(int i=0; i<dicoSize; i++){
+				nj = this.bSpam[i] * (nbSpam + 2*epsilon) - epsilon;
+				
+				if(vector[i] == true){	//x[i]=1
+					this.bSpam[i] = (double) ( (double) (nj + 1 + epsilon) / (double) (nbSpam + 1 + 2*epsilon) );
+				} else {	//x[i]=0;
+					this.bSpam[i] = (double) ( (double) (nj + 0 + epsilon) / (double) (nbSpam + 1 + 2*epsilon) );
+				}
+			}
+			
+			System.out.print(".");
+			
+			
+		} else if(spam == 1) { // HAM
+			this.nbHam++;
+			
+			//HAM, estimation des probabilites par les frequences
+			for(int i=0; i<dicoSize; i++){
+				nj = this.bHam[i] * (nbHam + 2*epsilon) - epsilon;
+				
+				if(vector[i] == true){	//x[i]=1
+					this.bHam[i] = (double) ( (double) (nj + 1 + epsilon) / (double) (nbHam + 1 + 2*epsilon) );
+				} else {	//x[i]=0;
+					this.bHam[i] = (double) ( (double) (nj + 0 + epsilon) / (double) (nbHam + 1 + 2*epsilon) );
+				}
+			}
+			
+			System.out.print(".");
+			
+		} else {
+			System.out.println("Critical Eror");
+		}
+		
+		int nbMail = this.nbHam + this.nbSpam;
+		
+		//SPAM, estimation Probabilite a posteriori P(Y = SPAM)
+		this.PSpam = (double) ( (double) nbSpam / (double) nbMail) ;
+		
+		//HAM, estimation Probabilite a posteriori P(Y = HAM)
+		this.PHam = 1 - this.PSpam;
+		
+		//System.out.println("PHam : "+PHam+"PSpam : "+PSpam);
+		System.out.println("    FAIT");
 		
 	}
 	
@@ -216,8 +276,7 @@ public class FiltreAntiSpam implements Serializable {
 		
 		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
 		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
-		//double px = Math.exp(PMailSpam+PMailHam);
-		double px = pHam+pSpam;
+
 		System.out.println(": P(Y=SPAM | X=x) =" + pSpam + ", P(Y=HAM | X=x) =" + pHam);
 		System.out.print("              =>");
 		
@@ -234,7 +293,7 @@ public class FiltreAntiSpam implements Serializable {
 		} else {
 			throw new Exception("Critical Error");
 		}
-		//TODO affichage
+
 	}
 	
 	public void test(String directoryPath) {
@@ -354,9 +413,9 @@ public class FiltreAntiSpam implements Serializable {
 			String classifieur = args[0];
 			String mail = args[1];
 			int spam = -1;
-			if(args[3].equals("SPAM")){
+			if(args[2].equals("SPAM")){
 				spam = 0;
-			}else if(args[3].equals("HAM")){
+			}else if(args[2].equals("HAM")){
 				spam = 1;
 			}else{
 				System.out.println("ERREUR SAISI");
