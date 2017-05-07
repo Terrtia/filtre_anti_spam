@@ -4,13 +4,18 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class FiltreAntiSpam {
+public class FiltreAntiSpam implements Serializable {
 	
 	public static final double epsilon = 1;
 	
@@ -141,6 +146,10 @@ public class FiltreAntiSpam {
 
 	}
 	
+	private void apprentissage(String mail, int spam) {
+		
+	}
+	
 	public int[] apprentissageOccurrenceMotsMail(String directoryName, int endIndex) throws Exception {
 		int mots[] = new int[dico.size()];
 		for(int i = 0; i < mots.length;i++){
@@ -203,11 +212,12 @@ public class FiltreAntiSpam {
 		}
 		PMailHam += this.PHam > 0 ? Math.log(this.PHam) : 0;
 		
-		double px = Math.exp(PMailSpam+PMailHam);
+		
 		
 		double pSpam = 1.0 / (1.0 + Math.exp(PMailHam - PMailSpam));
 		double pHam = 1.0 / (1.0 + Math.exp(PMailSpam - PMailHam));
-		
+		//double px = Math.exp(PMailSpam+PMailHam);
+		double px = pHam+pSpam;
 		System.out.println(": P(Y=SPAM | X=x) =" + pSpam + ", P(Y=HAM | X=x) =" + pHam);
 		System.out.print("              =>");
 		
@@ -287,79 +297,6 @@ public class FiltreAntiSpam {
 		
 	}
 	
-	private void saveClassifieur(String classifieur) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(PSpam+"\n");
-		sb.append(PHam+"\n");
-		
-		sb.append("Dico\n");
-		for(int i = 0; i < dico.size();i++){
-			sb.append(dico.get(i)+"\n");
-		}
-		
-		sb.append("bSpam\n");
-		for(int i = 0; i < bSpam.length;i++){
-			sb.append(bSpam[i]+"\n");
-		}
-		
-		sb.append("bHam\n");
-		for(int i = 0; i < bHam.length;i++){
-			sb.append(bHam[i]+"\n");
-		}
-		
-		FileWriter fstream;
-		try {
-			fstream = new FileWriter(classifieur);
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(sb.toString());
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	    System.out.println("Classifieur enregistré dans : "+classifieur);
-	    
-		
-	}
-	
-	private void loadClassifieur(String classifieur) {
-		String ligne;
-		int i = 0;
-		try{
-			InputStream ips=new FileInputStream(classifieur); 
-			InputStreamReader ipsr=new InputStreamReader(ips);
-			BufferedReader br=new BufferedReader(ipsr);
-			
-			ligne=br.readLine();
-			PSpam = Double.parseDouble(ligne);
-			
-			ligne=br.readLine();
-			PHam = Double.parseDouble(ligne);
-			
-			ligne = br.readLine();
-			while (!(ligne=br.readLine()).equals("bSpam")){
-				dico.add(ligne);
-			}
-			
-			bSpam = new double[dico.size()];
-			bHam = new double[dico.size()];
-			while (!(ligne=br.readLine()).equals("bHam")){
-				bSpam[i] = Double.parseDouble(ligne);
-				i++;
-			}
-			
-			i = 0;
-			while ((ligne=br.readLine())!=null){
-				bHam[i] = Double.parseDouble(ligne);
-				i++;
-			}
-			br.close(); 
-		}		
-		catch (Exception e){
-			e.printStackTrace();
-		}
-
-		
-	}
 
 	/**
 	 * @param args
@@ -374,14 +311,85 @@ public class FiltreAntiSpam {
 			int nbSpam = Integer.parseInt(args[3]); 
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 			fas.apprentissage(nbHam,nbSpam,"dictionnaire1000en.txt");
-			fas.saveClassifieur(classifieur);
+			ObjectOutputStream oos = null;
+			
+			try {
+			      final FileOutputStream fichier = new FileOutputStream(classifieur);
+			      oos = new ObjectOutputStream(fichier);
+			      oos.writeObject(fas);
+			      oos.flush();
+			    } catch (final java.io.IOException e) {
+			      e.printStackTrace();
+			    } finally {
+			      try {
+			        if (oos != null) {
+			          oos.flush();
+			          oos.close();
+			        }
+			      } catch (final IOException ex) {
+			        ex.printStackTrace();
+			      }
+			    }
+			System.out.println("Classifieur enregistré dans ’"+classifieur +"’.");
+		}else if (args.length == 3){
+			String classifieur = args[0];
+			String mail = args[1];
+			int spam = -1;
+			if(args[3].equals("SPAM")){
+				spam = 0;
+			}else if(args[3].equals("HAM")){
+				spam = 1;
+			}else{
+				System.out.println("ERREUR SAISI");
+			}
+			ObjectInputStream ois = null;
+			FiltreAntiSpam fas = null;
+			  FileInputStream fichier;
+			try {
+				fichier = new FileInputStream(classifieur);
+				ois = new ObjectInputStream(fichier);
+			    fas = (FiltreAntiSpam) ois.readObject();
+			} catch (ClassNotFoundException | IOException e1) {
+				e1.printStackTrace();
+			}
+			
+			fas.apprentissage(mail,spam);
+			
+			ObjectOutputStream oos = null;
+			try {
+			      final FileOutputStream fichier2 = new FileOutputStream(classifieur);
+			      oos = new ObjectOutputStream(fichier2);
+			      oos.writeObject(fas);
+			      oos.flush();
+			    } catch (final java.io.IOException e) {
+			      e.printStackTrace();
+			    } finally {
+			      try {
+			        if (oos != null) {
+			          oos.flush();
+			          oos.close();
+			        }
+			      } catch (final IOException ex) {
+			        ex.printStackTrace();
+			      }
+			    }
 		}else if (args.length == 2){
 			//chargement du classifieur et execution
 			String classifieur = args[0];
 			String mail = args[1];
-			FiltreAntiSpam fas = new FiltreAntiSpam();
-			fas.loadClassifieur(classifieur);
+			ObjectInputStream ois = null;
+			FiltreAntiSpam fas = null;
+			  FileInputStream fichier;
 			try {
+				fichier = new FileInputStream(classifieur);
+				ois = new ObjectInputStream(fichier);
+			    fas = (FiltreAntiSpam) ois.readObject();
+			} catch (ClassNotFoundException | IOException e1) {
+				e1.printStackTrace();
+			}
+		     
+			try {
+				
 				if(fas.verifyMail(mail)){
 					System.out.println("D’après ’"+classifieur+"’, le message ’"+mail+"’ est un SPAM !");
 				}else{
@@ -399,6 +407,8 @@ public class FiltreAntiSpam {
 			fas.test("basetest");
 		}
 	}
+
+	
 
 	
 
