@@ -98,7 +98,7 @@ public class FiltreAntiSpam implements Serializable {
 		return message;
 	}
 	
-	public void apprentissage(int nbHam,int nbSpam,String fichier) {
+	public void apprentissage(int nbSpam,int nbHam,String fichier) {
 		chargerDico(fichier);
 		// VARIABLE
 		this.nbHam = nbHam;
@@ -358,7 +358,6 @@ public class FiltreAntiSpam implements Serializable {
 	
 	public void save(String fileName){
 		ObjectOutputStream oos = null;
-		
 		try {
 		      final FileOutputStream fichier = new FileOutputStream(fileName);
 		      oos = new ObjectOutputStream(fichier);
@@ -403,10 +402,10 @@ public class FiltreAntiSpam implements Serializable {
 			//sauvegarde du classifieur
 			String classifieur = args[0];
 			String baseApp = args[1];
-			int nbHam = Integer.parseInt(args[2]); 
-			int nbSpam = Integer.parseInt(args[3]); 
+			int nbSpam = Integer.parseInt(args[2]); 
+			int nbHam = Integer.parseInt(args[3]); 
 			FiltreAntiSpam fas = new FiltreAntiSpam();
-			fas.apprentissage(nbHam,nbSpam,"dictionnaire1000en.txt");
+			fas.apprentissage(nbSpam,nbHam,"dictionnaire1000en.txt");
 			fas.save(classifieur);
 			System.out.println("Classifieur enregistré dans ’"+classifieur +"’.");
 		}else if (args.length == 3){
@@ -447,7 +446,7 @@ public class FiltreAntiSpam implements Serializable {
 			//execution standard
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 	
-			fas.apprentissage(100,200,"dictionnaire1000en.txt");
+			fas.apprentissage(500,1000,"dictionnaire1000en.txt");
 			
 			fas.test("basetest");
 		}
