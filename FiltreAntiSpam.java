@@ -297,6 +297,43 @@ public class FiltreAntiSpam implements Serializable {
 		
 	}
 	
+	public void save(String fileName){
+		ObjectOutputStream oos = null;
+		
+		try {
+		      final FileOutputStream fichier = new FileOutputStream(fileName);
+		      oos = new ObjectOutputStream(fichier);
+		      oos.writeObject(this);
+		      oos.flush();
+		    } catch (final java.io.IOException e) {
+		      e.printStackTrace();
+		    } finally {
+		      try {
+		        if (oos != null) {
+		          oos.flush();
+		          oos.close();
+		        }
+		      } catch (final IOException ex) {
+		        ex.printStackTrace();
+		      }
+		    }
+	}
+	
+	public FiltreAntiSpam load(String fileName){
+		ObjectInputStream ois = null;
+		FiltreAntiSpam fas = null;
+		  FileInputStream fichier;
+		try {
+			fichier = new FileInputStream(fileName);
+			ois = new ObjectInputStream(fichier);
+		    fas = (FiltreAntiSpam) ois.readObject();
+		    ois.close();
+		} catch (ClassNotFoundException | IOException e1) {
+			e1.printStackTrace();
+		}
+		return fas;
+	}
+	
 
 	/**
 	 * @param args
@@ -311,25 +348,7 @@ public class FiltreAntiSpam implements Serializable {
 			int nbSpam = Integer.parseInt(args[3]); 
 			FiltreAntiSpam fas = new FiltreAntiSpam();
 			fas.apprentissage(nbHam,nbSpam,"dictionnaire1000en.txt");
-			ObjectOutputStream oos = null;
-			
-			try {
-			      final FileOutputStream fichier = new FileOutputStream(classifieur);
-			      oos = new ObjectOutputStream(fichier);
-			      oos.writeObject(fas);
-			      oos.flush();
-			    } catch (final java.io.IOException e) {
-			      e.printStackTrace();
-			    } finally {
-			      try {
-			        if (oos != null) {
-			          oos.flush();
-			          oos.close();
-			        }
-			      } catch (final IOException ex) {
-			        ex.printStackTrace();
-			      }
-			    }
+			fas.save(classifieur);
 			System.out.println("Classifieur enregistré dans ’"+classifieur +"’.");
 		}else if (args.length == 3){
 			String classifieur = args[0];
@@ -342,52 +361,19 @@ public class FiltreAntiSpam implements Serializable {
 			}else{
 				System.out.println("ERREUR SAISI");
 			}
-			ObjectInputStream ois = null;
-			FiltreAntiSpam fas = null;
-			  FileInputStream fichier;
-			try {
-				fichier = new FileInputStream(classifieur);
-				ois = new ObjectInputStream(fichier);
-			    fas = (FiltreAntiSpam) ois.readObject();
-			} catch (ClassNotFoundException | IOException e1) {
-				e1.printStackTrace();
-			}
 			
+			FiltreAntiSpam fas = new FiltreAntiSpam();
+			fas = fas.load(classifieur);
+
 			fas.apprentissage(mail,spam);
 			
-			ObjectOutputStream oos = null;
-			try {
-			      final FileOutputStream fichier2 = new FileOutputStream(classifieur);
-			      oos = new ObjectOutputStream(fichier2);
-			      oos.writeObject(fas);
-			      oos.flush();
-			    } catch (final java.io.IOException e) {
-			      e.printStackTrace();
-			    } finally {
-			      try {
-			        if (oos != null) {
-			          oos.flush();
-			          oos.close();
-			        }
-			      } catch (final IOException ex) {
-			        ex.printStackTrace();
-			      }
-			    }
+			fas.save(classifieur);
 		}else if (args.length == 2){
 			//chargement du classifieur et execution
 			String classifieur = args[0];
 			String mail = args[1];
-			ObjectInputStream ois = null;
-			FiltreAntiSpam fas = null;
-			  FileInputStream fichier;
-			try {
-				fichier = new FileInputStream(classifieur);
-				ois = new ObjectInputStream(fichier);
-			    fas = (FiltreAntiSpam) ois.readObject();
-			} catch (ClassNotFoundException | IOException e1) {
-				e1.printStackTrace();
-			}
-		     
+			FiltreAntiSpam fas = new FiltreAntiSpam();
+			fas = fas.load(classifieur);
 			try {
 				
 				if(fas.verifyMail(mail)){
